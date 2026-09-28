@@ -45,7 +45,7 @@ with tabs[0]:
                         window.speechSynthesis.speak(msg);
                         i++;
                         setTimeout(speakNext, 1100);
-                    }
+                
                 }}
                 speakNext();
             }}
