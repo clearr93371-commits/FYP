@@ -33,65 +33,65 @@ def create_digit_audio(digit_list, lang='zh-tw'):
 # ==========================================
 with tabs[0]:
     st.header("🎮 1. 數字重複遊戲 (Digit Memory Game)")
-st.write("請按下方按鈕播放語音導讀，然後輸入或複述聽到的數字。")
-
-mode = st.radio("選擇測試內容:", ["向前重複 [ 2 1 8 5 4 ]", "向後重複 [ 7 4 2 ]"])
-
-if "向前" in mode:
-    digits = [2, 1, 8, 5, 4]
-    target_str = "21854"
-else:
-    digits = [7, 4, 2]
-    target_str = "742"
-
-st.subheader("🔊 語音播放 (Voice Audio)")
-
-# 1. Native Streamlit Audio Player
-audio_bytes = create_digit_audio(digits, lang='zh-tw')
-st.audio(audio_bytes, format='audio/mp3')
-
-st.caption("💡 提示：點擊上方播放按鈕，系統將以每秒一個數字的節奏朗讀。")
-
-st.markdown("---")
-
-# 2. Interactive Animated Display for Spoken/Entered Response
-st.subheader("🗣️ 病人回答區 (Patient Response)")
-
-user_input = st.text_input("輸入病人回答的數字 (例如: 21854):", key="digit_input")
-
-# Dynamic Animated Number Pop-up
-if user_input:
-    st.write("病人的回答 (視覺化顯示):")
-    cols = st.columns(len(user_input))
-    for idx, char in enumerate(user_input):
-        with cols[idx]:
-            st.markdown(
-                f"""
-                <div style="
-                    background: linear-gradient(135deg, #FF6B6B, #FF8E53);
-                    color: white;
-                    font-size: 36px;
-                    font-weight: bold;
-                    text-align: center;
-                    border-radius: 50%;
-                    width: 65px;
-                    height: 65px;
-                    line-height: 65px;
-                    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-                    margin: auto;
-                    animation: pop 0.3s ease-out;
-                ">
-                    {char}
-                </div>
-                """,
-                unsafe_allow_html=True
-            )
-
-if st.button("提交並核對分數"):
-    if user_input.strip() == target_str:
-        st.success("✅ 回答正確！得分: 1分")
+    st.write("請按下方按鈕播放語音導讀，然後輸入或複述聽到的數字。")
+    
+    mode = st.radio("選擇測試內容:", ["向前重複 [ 2 1 8 5 4 ]", "向後重複 [ 7 4 2 ]"])
+    
+    if "向前" in mode:
+        digits = [2, 1, 8, 5, 4]
+        target_str = "21854"
     else:
-        st.error(f"❌ 回答錯誤。正確答案應為: {target_str}")
+        digits = [7, 4, 2]
+        target_str = "742"
+    
+    st.subheader("🔊 語音播放 (Voice Audio)")
+    
+    # 1. Native Streamlit Audio Player
+    audio_bytes = create_digit_audio(digits, lang='zh-tw')
+    st.audio(audio_bytes, format='audio/mp3')
+    
+    st.caption("💡 提示：點擊上方播放按鈕，系統將以每秒一個數字的節奏朗讀。")
+    
+    st.markdown("---")
+    
+    # 2. Interactive Animated Display for Spoken/Entered Response
+    st.subheader("🗣️ 病人回答區 (Patient Response)")
+    
+    user_input = st.text_input("輸入病人回答的數字 (例如: 21854):", key="digit_input")
+    
+    # Dynamic Animated Number Pop-up
+    if user_input:
+        st.write("病人的回答 (視覺化顯示):")
+        cols = st.columns(len(user_input))
+        for idx, char in enumerate(user_input):
+            with cols[idx]:
+                st.markdown(
+                    f"""
+                    <div style="
+                        background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+                        color: white;
+                        font-size: 36px;
+                        font-weight: bold;
+                        text-align: center;
+                        border-radius: 50%;
+                        width: 65px;
+                        height: 65px;
+                        line-height: 65px;
+                        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+                        margin: auto;
+                        animation: pop 0.3s ease-out;
+                    ">
+                        {char}
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+    
+    if st.button("提交並核對分數"):
+        if user_input.strip() == target_str:
+            st.success("✅ 回答正確！得分: 1分")
+        else:
+            st.error(f"❌ 回答錯誤。正確答案應為: {target_str}")
     
 # ==========================================
 # TAB 2: VIGILANCE TEST (TAP ON '1')
