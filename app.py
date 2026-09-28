@@ -1,6 +1,6 @@
 import streamlit as st
 import streamlit.components.v1 as components
-from gtts import gTTS
+
 import time
 
 st.set_page_config(page_title="MoCA Interactive Assessment", layout="centered")
@@ -17,81 +17,137 @@ if "vigilance_score" not in st.session_state:
 
 tabs = st.tabs(["1. 數字重複 (Digit Span)", "2. 聽數反應 (Vigilance Test)", "3. 定向測試 (Orientation)"])
 
-def create_digit_audio(digit_list, lang='zh-tw'):
-    # Adds spaces between numbers to force slow, 1-second cadence
-    spoken_text = " . ".join(map(str, digit_list))
-    tts = gTTS(text=spoken_text, lang=lang, slow=True)
+# def create_digit_audio(digit_list, lang='zh-tw'):
+#     # Adds spaces between numbers to force slow, 1-second cadence
+#     spoken_text = " . ".join(map(str, digit_list))
+#     tts = gTTS(text=spoken_text, lang=lang, slow=True)
     
-    fp = io.BytesIO()
-    tts.write_to_fp(fp)
-    fp.seek(0)
-    return fp
+#     fp = io.BytesIO()
+#     tts.write_to_fp(fp)
+#     fp.seek(0)
+#     return fp
 
 
 # ==========================================
 # TAB 1: DIGIT SPAN (FORWARD & BACKWARD)
 # ==========================================
 with tabs[0]:
-    st.header("🎮 1. 數字重複遊戲 (Digit Memory Game)")
-    st.write("請按下方按鈕播放語音導讀，然後輸入或複述聽到的數字。")
+    st.header("🎮 數字重複遊戲 (Digit Memory Game)")
+    st.write("請聆聽系統朗讀的數字，然後按順序（或倒序）複述。")
     
-    mode = st.radio("選擇測試內容:", ["向前重複 [ 2 1 8 5 4 ]", "向後重複 [ 7 4 2 ]"])
+    mode = st.radio("選擇模式:", ["向前重複 (2 1 8 5 4)", "向後重複 (7 4 2)"])
     
-    if "向前" in mode:
-        digits = [2, 1, 8, 5, 4]
-        target_str = "21854"
-    else:
-        digits = [7, 4, 2]
-        target_str = "742"
+    target_seq = [2, 1, 8, 5, 4] if "向前" in mode else [7, 4, 2]
+    target_str = "".join(map(str, target_seq))
     
-    st.subheader("🔊 語音播放 (Voice Audio)")
+    col1, col2 = st.columns(2)
     
-    # 1. Native Streamlit Audio Player
-    audio_bytes = create_digit_audio(digits, lang='zh-tw')
-    st.audio(audio_bytes, format='audio/mp3')
+    with col1:
+        # TTS Audio Playback JS Component
+        js_speech = f"""
+            <script>
+            function readNumbers() {{
+                const numbers = {target_seq};
+                let i = 0;
+                function speakNext() {{
+                    if (i < numbers.length) {{
+                        let msg = new SpeechSynthesisUtterance(numbers[i].toString());
+                        msg.lang = 'zh-HK'; // Cantonese voice, change to 'zh-CN' or 'en-US' if needed
+                        msg.rate = 0.8;    // 1 digit per second rate
+                        window.speechSynthesis.speak(msg);
+                        i++;
+                        setTimeout(speakNext, 1100);
+                
+                }}
+                speakNext();
+            }}
+            </script>
+            <button onclick="readNumbers()" style="padding: 10px 20px; font-size: 18px; background-color: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                🔊 播放語音數字 (每秒一個)
+            </button>
+        """
+        components.html(js_speech, height=70)
     
-    st.caption("💡 提示：點擊上方播放按鈕，系統將以每秒一個數字的節奏朗讀。")
+    st.subheader("🗣️ 患者回答區 (Speak or Enter Response)")
     
-    st.markdown("---")
+    # Custom Animated Speech Display Component
+    speech_component = """
+    <style>
+        .container { display: flex; gap: 10px; margin-top: 15px; min-height: 80px; }
+        .number-bubble {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            animation: popup 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes popup {
+            0% { transform: scale(0) translateY(20px); opacity: 0; }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+    </style>
+    <div id="speech-bubbles" class="container"></div>
+
+    <script>
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition;
     
-    # 2. Interactive Animated Display for Spoken/Entered Response
-    st.subheader("🗣️ 病人回答區 (Patient Response)")
+    if (SpeechRecognition) {
+        recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.lang = 'zh-HK';
+        
+        recognition.onresult = (event) => {
+            const container = document.getElementById('speech-bubbles');
+            container.innerHTML = '';
+            const transcript = event.results[event.results.length - 1][0].transcript;
+            const digits = transcript.replace(/[^0-9]/g, '');
+            
+            for (let char of digits) {
+                let bubble = document.createElement('div');
+                bubble.className = 'number-bubble';
+                bubble.innerText = char;
+                container.appendChild(bubble);
+            }
+        };
+    }
     
-    user_input = st.text_input("輸入病人回答的數字 (例如: 21854):", key="digit_input")
+    function startListening() {
+        if (recognition) recognition.start();
+        else alert("Browser does not support direct Web Speech API");
+    }
+    </script>
+    <button onclick="startListening()" style="padding: 10px 20px; font-size: 16px; background-color: #2196F3; color: white; border: none; border-radius: 8px; cursor: pointer;">
+        🎙️ 開始語音識別 (Voice Input)
+    </button>
+    """
+    components.html(speech_component, height=160)
     
-    # Dynamic Animated Number Pop-up
-    if user_input:
-        st.write("病人的回答 (視覺化顯示):")
-        cols = st.columns(len(user_input))
-        for idx, char in enumerate(user_input):
-            with cols[idx]:
-                st.markdown(
-                    f"""
-                    <div style="
-                        background: linear-gradient(135deg, #FF6B6B, #FF8E53);
-                        color: white;
-                        font-size: 36px;
-                        font-weight: bold;
-                        text-align: center;
-                        border-radius: 50%;
-                        width: 65px;
-                        height: 65px;
-                        line-height: 65px;
-                        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-                        margin: auto;
-                        animation: pop 0.3s ease-out;
-                    ">
-                        {char}
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+    user_input = st.text_input("或直接輸入回答數字 (供測試/人工核對):", key="ds_input")
     
-    if st.button("提交並核對分數"):
-        if user_input.strip() == target_str:
-            st.success("✅ 回答正確！得分: 1分")
+    if st.button("提交並計分"):
+        clean_input = user_input.strip()
+        if clean_input == target_str:
+            st.success("✅ 回答正確！ (+1分)")
+            if "向前" in mode:
+                st.session_state.ds_forward_score = 1
+            else:
+                st.session_state.ds_backward_score = 1
         else:
-            st.error(f"❌ 回答錯誤。正確答案應為: {target_str}")
+            st.error(f"❌ 回答不正確。目標為: {target_str}")
+            if "向前" in mode:
+                st.session_state.ds_forward_score = 0
+            else:
+                st.session_state.ds_backward_score = 0
+
+    st.info(f"**數字記憶得分**: {st.session_state.ds_forward_score + st.session_state.ds_backward_score} / 2")
     
 # ==========================================
 # TAB 2: VIGILANCE TEST (TAP ON '1')
