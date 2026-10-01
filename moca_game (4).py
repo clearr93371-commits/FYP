@@ -190,7 +190,7 @@ def parse_digits(t):
 # ----------------------------------------------------------------------------
 # App
 # ----------------------------------------------------------------------------
-st.set_page_config(page_title="MoCA Game", page_icon="🧠", layout="centered")
+st.set_page_config(page_title="小遊戲", page_icon="⭐", layout="centered")
 st.markdown("""<style>
 .chip{display:inline-block;margin:6px;padding:14px 26px;border-radius:18px;font-size:38px;font-weight:700;background:#fff3c4;
  animation:pop .55s cubic-bezier(.2,1.7,.4,1) both}
@@ -221,7 +221,7 @@ with st.sidebar:
         ss.clear(); st.rerun()
 
 step = STEPS[ss.step]
-st.title("🧠 MoCA Game")
+st.title("⭐ 小遊戲")
 
 if step == "intro":
     st.write("這是一連串小遊戲。請準備好耳機/喇叭及麥克風。\n\nA few short games. Please have speakers and a microphone ready (use Chrome/Edge).")
@@ -231,8 +231,9 @@ if step == "intro":
 elif step in ("fwd", "bwd"):
     fwd = step == "fwd"
     digits, expected = ("21854", "21854") if fwd else ("742", "247")
-    st.subheader("① 數字重複 " + ("(向前 Forward)" if fwd else "(向後 Backward)"))
-    st.caption("按 🔊 聽一次數字，然後按 🎤 說出" + ("相同的數字" if fwd else "倒轉的數字") + "。Listen once, then say the numbers " + ("in the same order." if fwd else "backwards."))
+    st.subheader("購物中⋯⋯" + ("(向前 Forward)" if fwd else "(向後 Backward)"))
+    st.caption("現在需要你購買以下物品: 🍎🍼🍌🥄🥣")
+    st.caption("按 🔊 聽一次各項物品的所需數量，然後按 🎤 向超市職員說出每項物品嘅數量" + ("相同的數字" if fwd else "倒轉的數字") + "。Listen once, then say the numbers " + ("in the same order." if fwd else "backwards."))
     v = widget(mode="digits", digits=digits, lang=ss.lang, stt=ss.stt, max_plays=1, key=step, default=None)
     if v:
         parsed = parse_digits(v["transcript"]); ok = parsed == expected
